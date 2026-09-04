@@ -1,7 +1,6 @@
 package main
 
 import (
-	"compress/gzip"
 	"context"
 	"errors"
 	"fmt"
@@ -12,6 +11,7 @@ import (
 	"runtime"
 	"strconv"
 
+	"github.com/klauspost/compress/zstd"
 	"golang.org/x/sys/unix"
 )
 
@@ -57,9 +57,9 @@ func installOllama(ctx context.Context, release, installPath string) (string, er
 		return "", fmt.Errorf("failed to create ollama directory: %w", err)
 	}
 
-	filename := "ollama-linux-amd64.tgz"
+	filename := "ollama-linux-amd64.tar.zst"
 	if runtime.GOARCH == "arm64" {
-		filename = "ollama-linux-arm64.tgz"
+		filename = "ollama-linux-arm64.tar.zst"
 	}
 	assetURL, err := getReleaseAssetURL(ctx, release, filename)
 	if err != nil {
@@ -83,11 +83,12 @@ func installOllama(ctx context.Context, release, installPath string) (string, er
 	}
 	defer resp.Body.Close()
 
-	gzipReader, err := gzip.NewReader(resp.Body)
+	zstdReader, err := zstd.NewReader(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("failed to read gzip archive: %w", err)
+		return "", fmt.Errorf("failed to read zstd archive: %w", err)
 	}
-	if err = extractTar(gzipReader, installPath); err != nil {
+	defer zstdReader.Close()
+	if err = extractTar(zstdReader, installPath); err != nil {
 		return "", err
 	}
 
