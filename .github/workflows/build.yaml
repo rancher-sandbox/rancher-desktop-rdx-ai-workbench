@@ -43,3 +43,14 @@ jobs:
           linux/arm64
         push: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
         tags: ${{ steps.tags.outputs.TAGS }}
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      with:
+        persist-credentials: false
+    - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+      with:
+        go-version-file: installer/go.mod
+    - run: go test ./...
+      working-directory: installer
