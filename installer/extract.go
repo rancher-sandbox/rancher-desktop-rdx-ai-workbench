@@ -51,8 +51,16 @@ func extractTar(reader io.Reader, destination string) error {
 			if n < header.Size {
 				return fmt.Errorf("error extracting %s: extracted %d of %d bytes", header.Name, n, header.Size)
 			}
-		case tar.TypeLink, tar.TypeSymlink:
+		case tar.TypeLink:
+			// A hard link names its target relative to the root of the archive.
 			if !filepath.IsLocal(header.Linkname) {
+				return fmt.Errorf("error extracting %s: %w", header.Name, tar.ErrInsecurePath)
+			}
+			links = append(links, *header)
+		case tar.TypeSymlink:
+			// A symlink names its target relative to the directory holding the link.
+			target := filepath.Join(filepath.Dir(header.Name), header.Linkname)
+			if filepath.IsAbs(header.Linkname) || !filepath.IsLocal(target) {
 				return fmt.Errorf("error extracting %s: %w", header.Name, tar.ErrInsecurePath)
 			}
 			links = append(links, *header)
@@ -63,12 +71,12 @@ func extractTar(reader io.Reader, destination string) error {
 
 	for _, link := range links {
 		newName := filepath.Join(destination, link.Name)
-		oldName := filepath.Join(destination, link.Linkname)
 		var err error
 		if link.Typeflag == tar.TypeLink {
-			err = os.Link(oldName, newName)
+			err = os.Link(filepath.Join(destination, link.Linkname), newName)
 		} else {
-			err = os.Symlink(oldName, newName)
+			// Keep the target as written, so that it resolves next to the link.
+			err = os.Symlink(link.Linkname, newName)
 		}
 		if err != nil {
 			return fmt.Errorf("error extracting %s: could not create link: %w", link.Name, err)
