@@ -108,7 +108,7 @@ func install(ctx context.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to get install location: %w", err)
 		}
-		_, err = installOllama(ctx, *releaseVersion, installLocation)
+		executablePath, err = installOllama(ctx, *releaseVersion, installLocation)
 		if err != nil {
 			return fmt.Errorf("failed to install ollama: %w", err)
 		}
@@ -121,6 +121,9 @@ func install(ctx context.Context) error {
 			break
 		}
 		time.Sleep(time.Second)
+	}
+	if err != nil {
+		return fmt.Errorf("failed to run %s: %w", executablePath, err)
 	}
 
 	return nil
