@@ -5,5 +5,5 @@ go 1.26.0
 require (
 	github.com/klauspost/compress v1.20.0
 	github.com/xenking/zipstream v1.0.1
-	golang.org/x/sys v0.48.0
+	golang.org/x/sys v0.49.0
 )
