@@ -3,7 +3,7 @@ module github.com/rancher-sandbox/rd-ai-workbench-docker-ext/installer
 go 1.26.0
 
 require (
-	github.com/klauspost/compress v1.20.0
+	github.com/klauspost/compress v1.20.3
 	github.com/xenking/zipstream v1.0.1
 	golang.org/x/sys v0.48.0
 )
